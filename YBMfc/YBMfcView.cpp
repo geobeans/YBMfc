@@ -210,25 +210,12 @@ void BT_3d(double L2,double x1,double y1,double x2,double y2,double *xl,double *
 bool CYBMfcView::DrawAttitude(CDC* pDC, int iCurBent,int iCurPitch, int cx, int cy, int r, int iMode)
 {
 	CPaintDC dc(this);// device context for painting
-					  /////// 利用CFont::CreateFont(...)函数实现竖写汉字////////
-	CFont myFont;     //创建字体对象
-					  //创建逻辑字体
-	myFont.CreateFont(
-		26,        //字体高度(旋转后的字体宽度)=56
-		10,        //字体宽度(旋转后的字体高度)=20
-		300,       //字体显示角度=270°
-		0,                  //nOrientation=0
-		10,                 //字体磅数=10
-		FALSE,              //非斜体
-		FALSE,              //无下划线
-		FALSE,       //无删除线
-		DEFAULT_CHARSET,    //使用缺省字符集
-		OUT_DEFAULT_PRECIS, //缺省输出精度
-		CLIP_DEFAULT_PRECIS,//缺省裁减精度
-		DEFAULT_QUALITY,    //nQuality=缺省值
-		DEFAULT_PITCH,      //nPitchAndFamily=缺省值
-		"@system");         //字体名=@system
-	CFont *pOldFont = pDC->SelectObject(&myFont);//选入设备描述表
+	
+	HFONT hFont;
+	RECT rect;
+	hFont = CreateFont(16, 6, -300, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Times New Roman"));
+	HFONT hOldFont = (HFONT)pDC->SelectObject(hFont);
 
     //先画坡度仪表在上面
 	int kdL = 14;
@@ -418,8 +405,10 @@ bool CYBMfcView::DrawAttitude(CDC* pDC, int iCurBent,int iCurPitch, int cx, int 
 		iCurY -= gap;
 	}
 
-	pDC->SelectObject(pOldFont); //将myFont从设备环境中分离
-	myFont.DeleteObject();     //删除myFont对象
+	pDC->SelectObject(hOldFont);
+	DeleteObject(hFont);
+	//pDC->SelectObject(pOldFont); //将myFont从设备环境中分离
+	//myFont.DeleteObject();     //删除myFont对象
 	return true;
 }
 
@@ -530,41 +519,32 @@ void CYBMfcView::OnDraw(CDC* pDC)
 	if (!pDoc)
 		return;
 
-	HDC hdc = pDC->GetSafeHdc();
-
-	HFONT hFont;
-	RECT rect;
-	hFont = CreateFont(36, 20, 250, 0, FW_DONTCARE, FALSE, TRUE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
-		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Times New Roman"));
-	SelectObject(hdc, hFont);
-
+	
 	//Sets the coordinates for the rectangle in which the text is to be formatted.
-	SetRect(&rect, 100, 200, 900, 800);
-	SetTextColor(hdc, RGB(0, 128, 0));
-	char strBuf[] = "Drawing Text with Times New Roman";
-	pDC->TextOut(100, 200, strBuf, strnlen(strBuf, _countof(strBuf)));
+	//SetRect(&rect, 100, 200, 900, 800);
+	//SetTextColor(hdc, RGB(0, 128, 0));
+	//char strBuf[] = "10";
+	//pDC->TextOut(100, 200, strBuf, strnlen(strBuf, _countof(strBuf)));
+		
+	RECT rec;
+	GetClientRect(&rec);
+	int iWidth = rec.right - rec.left;
+	int iHeight = rec.bottom - rec.top;
+//
+    int top = gGap;
+	int bottom = iHeight - gGap;
+//
+	int step = 10;
+//
+	DrawVerStrip(pDC, m_iSpeed, 200, top, bottom, step, 0);
+	step = 100;
+	DrawVerStrip(pDC, m_iAlt, 600, top, bottom, step, 1);
 
-	//pDC->DrawText(TEXT("Drawing Text with Times New Roman"), -1, &rect, DT_NOCLIP);
+	DrawDirectionStrip(pDC, m_direct, 500, 200, 600, 5, 0);
 
+	DrawAttitude(pDC, m_iBent,m_iPitch,400, 300, 200, 0);
 
-//	RECT rec;
-//	GetClientRect(&rec);
-//	int iWidth = rec.right - rec.left;
-//	int iHeight = rec.bottom - rec.top;
-//
-//    int top = gGap;
-//	int bottom = iHeight - gGap;
-//
-//	int step = 10;
-//
-//	DrawVerStrip(pDC, m_iSpeed, 200, top, bottom, step, 0);
-//	step = 100;
-//	DrawVerStrip(pDC, m_iAlt, 600, top, bottom, step, 1);
-//
-//	DrawDirectionStrip(pDC, m_direct, 500, 200, 600, 5, 0);
-//
-//	DrawAttitude(pDC, m_iBent,m_iPitch,400, 300, 200, 0);
-	// TODO: 在此处为本机数据添加绘制代码
+//	DeleteObject(hFont);
 }
 
 void CYBMfcView::OnRButtonUp(UINT /* nFlags */, CPoint point)
@@ -647,5 +627,5 @@ void CYBMfcView::OnInitialUpdate()
 	SetTimer(2, 50,NULL);
 	SetTimer(3,50,NULL);
 	//SetTimer(4,50,NULL);
-	SetTimer(5,50,NULL);
+	//SetTimer(5,50,NULL);
 }
