@@ -412,6 +412,60 @@ bool CYBMfcView::DrawAttitude(CDC* pDC, int iCurBent,int iCurPitch, int cx, int 
 	return true;
 }
 
+bool DrawYoubiao(CDC* pDC,int iVal,int x,int y,int iMode)
+{
+	int iBase;
+	if (iMode == 0)
+		iBase = 10;
+	else
+		iBase = -10;
+
+	int iWidth = iBase * 4;
+	int iHeight = iWidth * 2 / 3;
+
+	POINT pnt[8];
+	pnt[0].x = x;
+	pnt[0].y = y;
+	pnt[1].x = x-iBase;
+	pnt[1].y = y-iHeight/2+iHeight /3;
+	pnt[2].x = x-iBase;
+	pnt[2].y = y- iHeight /2;
+	pnt[3].x = pnt[2].x-iWidth;
+	pnt[3].y = pnt[2].y;
+	pnt[4].x = pnt[3].x;
+	pnt[4].y = pnt[2].y+iHeight;
+	pnt[5].x = pnt[2].x;
+	pnt[5].y = pnt[4].y;
+	pnt[6].x = pnt[5].x;
+	pnt[6].y = pnt[4].y- iHeight / 3;
+	pnt[7].x = x;
+	pnt[7].y = y;
+
+
+	HBRUSH brush = CreateSolidBrush(RGB(0,0,0));
+	HBRUSH hOld = (HBRUSH)pDC->SelectObject(brush);
+	
+	HPEN hpen = CreatePen(PS_SOLID, 2, RGB(0, 255, 0));
+	HPEN holdPen = (HPEN)pDC->SelectObject(hpen);
+
+	HFONT hFont = CreateFont(18, 8, 0, 0, FW_DONTCARE, FALSE, FALSE, FALSE, DEFAULT_CHARSET, OUT_OUTLINE_PRECIS,
+		CLIP_DEFAULT_PRECIS, CLEARTYPE_QUALITY, VARIABLE_PITCH, TEXT("Times New Roman"));
+	HFONT hOldFont = (HFONT)pDC->SelectObject(hFont);
+
+	pDC->Polygon(pnt,8);
+	pDC->Polygon(pnt, 8);
+	COLORREF col = pDC->SetTextColor(RGB(255,0,0));
+	pDC->SetBkMode(TRANSPARENT);      //²»ÏÔÊ¾ÎÄ×Ö±³¾°
+	char strBuf[10];
+	itoa(iVal, strBuf, 10);
+	pDC->TextOut(x-iBase-iWidth, y-iHeight/2, strBuf, strnlen(strBuf, _countof(strBuf)));
+	pDC->SetTextColor(col);
+	pDC->SelectObject(hOld);
+	pDC->SelectObject(holdPen);
+	pDC->SelectObject(hOldFont);
+	return true;
+}
+
 bool CYBMfcView::DrawVerStrip(CDC* pDC, int iCurVal, int iXOrg, int top, int bottom, int step, int iMode)
 {
 	int kdOffset;
@@ -444,6 +498,8 @@ bool CYBMfcView::DrawVerStrip(CDC* pDC, int iCurVal, int iXOrg, int top, int bot
 	char strBuf[10];
 	itoa(iCurVal, strBuf, 10);
 	pDC->TextOut(iXOrg - labelOffset, iYOrg - 7, strBuf, strnlen(strBuf, _countof(strBuf)));
+
+	DrawYoubiao(pDC, iCurVal, iXOrg, iYOrg, iMode);
 
 	int prev = iCurVal / step * step;
 	int nex = prev + step;
